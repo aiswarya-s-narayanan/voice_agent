@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Voice Assistant | Restaurant Kiosk</title>
+  <meta name="description" content="Smart voice-powered restaurant ordering kiosk. Simply speak your order and let our AI assistant handle the rest." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <span class="brand-icon">🍽️</span>
+      <span class="brand-name">TasteAI Kiosk</span>
+    </div>
+    <div class="header-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Initializing...</span>
+    </div>
+    <a href="/kitchen.html" class="kitchen-btn" target="_blank" title="Open Kitchen Display">
+      <span>👨‍🍳</span> Kitchen
+    </a>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Left Panel: Voice Assistant -->
+    <section class="voice-panel glass-card" aria-label="Voice Assistant">
+      <div class="assistant-avatar-wrapper">
+        <div class="avatar-ring" id="avatarRing">
+          <div class="avatar-icon">🤖</div>
+        </div>
+        <div class="vad-bars" id="vadBars">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="assistant-name">NOVA</div>
+      <div class="assistant-subtitle">Your AI Food Assistant</div>
+
+      <!-- Conversation -->
+      <div class="conversation-box" id="conversationBox">
+        <div class="chat-msg assistant-msg" id="welcomeMsg">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">
+            Welcome! I'm Nova, your personal AI food assistant. 🎉<br/>
+            What would you like to order today? You can say something like<br/>
+            <em>"I want 2 biriyani"</em> or <em>"Show me the menu"</em>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcript -->
+      <div class="transcript-container">
+        <div class="transcript-label">
+          <span class="mic-icon" id="micIcon">🎙️</span>
+          <span id="transcriptStatus">Click the mic to start speaking</span>
+        </div>
+        <div class="transcript-text" id="transcriptText">—</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="voice-controls">
+        <button class="mic-btn" id="micBtn" title="Hold to speak" aria-label="Activate microphone">
+          <span class="mic-btn-icon" id="micBtnIcon">🎤</span>
+          <span class="mic-btn-label" id="micBtnLabel">Tap to Speak</span>
+        </button>
+        <button class="clear-btn" id="clearBtn" title="Clear conversation">
+          <span>🗑️</span> Clear
+        </button>
+      </div>
+
+      <!-- VAD Indicator -->
+      <div class="vad-status" id="vadStatus">
+        <span class="vad-badge" id="vadBadge">FireRedVAD Ready</span>
+      </div>
+    </section>
+
+    <!-- Right Panel: Menu + Order -->
+    <section class="right-panel">
+
+      <!-- Category Tabs -->
+      <div class="categories-bar glass-card" id="categoriesBar">
+        <div class="categories-label">📋 Menu</div>
+        <div class="categories-list" id="categoriesList">
+          <button class="cat-tab active" data-id="all">All Items</button>
+        </div>
+      </div>
+
+      <!-- Menu Grid -->
+      <div class="menu-section glass-card">
+        <div class="menu-header">
+          <h2 class="menu-title">🍜 Our Menu</h2>
+          <div class="menu-search-wrap">
+            <input type="text" class="menu-search" id="menuSearch" placeholder="Search dishes..." aria-label="Search menu" />
+            <span class="search-icon">🔍</span>
+          </div>
+        </div>
+        <div class="menu-grid" id="menuGrid">
+          <div class="menu-loading" id="menuLoading">
+            <div class="spinner"></div>
+            <span>Loading delicious menu...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-panel glass-card" id="orderPanel">
+        <div class="order-header">
+          <h3 class="order-title">🛒 Your Order</h3>
+          <span class="order-count badge" id="orderCount">0 items</span>
+        </div>
+        <div class="order-items" id="orderItems">
+          <div class="empty-order">No items yet. Start speaking or tap a dish!</div>
+        </div>
+        <div class="order-footer" id="orderFooter" style="display:none">
+          <div class="order-total-row">
+            <span>Total</span>
+            <span class="order-total" id="orderTotal">₹0.00</span>
+          </div>
+          <div class="order-actions">
+            <button class="btn-confirm" id="confirmOrderBtn">✅ Confirm Order</button>
+            <button class="btn-clear-order" id="clearOrderBtn">🗑️ Clear</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Order Success Modal -->
+  <div class="modal-overlay" id="successModal" role="dialog" aria-modal="true" aria-label="Order Confirmed">
+    <div class="modal-card glass-card">
+      <div class="modal-icon">🎉</div>
+      <h2 class="modal-title">Order Confirmed!</h2>
+      <p class="modal-sub">Your order has been sent to the kitchen.</p>
+      <div class="modal-order-id" id="modalOrderId"></div>
+      <div class="modal-items" id="modalItems"></div>
+      <div class="modal-total" id="modalTotal"></div>
+      <button class="btn-confirm modal-close-btn" id="modalCloseBtn">🍽️ New Order</button>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-label="Confirm Order">
+    <div class="modal-card glass-card">
+      <div class="modal-icon">📋</div>
+      <h2 class="modal-title">Review Your Order</h2>
+      <div class="modal-items" id="confirmModalItems"></div>
+      <div class="modal-total" id="confirmModalTotal"></div>
+      <div class="confirm-actions">
+        <button class="btn-confirm" id="confirmYesBtn">✅ Yes, Place Order</button>
+        <button class="btn-clear-order" id="confirmNoBtn">✏️ Edit Order</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="menu.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

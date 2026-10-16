@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitchen Display | TasteAI</title>
+  <meta name="description" content="Kitchen display system for real-time order management." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: #0a0a0f; }
+    .kitchen-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem; background: rgba(255,100,0,0.1);
+      border-bottom: 1px solid rgba(255,100,0,0.3);
+    }
+    .kitchen-brand { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: #ff6400; }
+    .kitchen-clock { font-size: 1.2rem; font-weight: 600; color: #fff; font-family: monospace; }
+    .kitchen-ws-status { font-size: 0.8rem; color: #aaa; display:flex; align-items:center; gap:0.4rem; }
+    .kitchen-main { padding: 1.5rem 2rem; }
+    .kitchen-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+    .order-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 1.2rem; transition: all 0.3s; position: relative;
+      animation: slideInCard 0.4s ease;
+    }
+    @keyframes slideInCard {
+      from { opacity:0; transform: translateY(-20px) scale(0.97); }
+      to { opacity:1; transform: translateY(0) scale(1); }
+    }
+    .order-card.status-pending { border-color: rgba(255,180,0,0.5); box-shadow: 0 0 20px rgba(255,180,0,0.1); }
+    .order-card.status-preparing { border-color: rgba(0,180,255,0.5); box-shadow: 0 0 20px rgba(0,180,255,0.1); }
+    .order-card.status-ready { border-color: rgba(50,220,100,0.5); box-shadow: 0 0 20px rgba(50,220,100,0.1); }
+    .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+    .order-id { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .order-table { font-size: 0.8rem; color: #aaa; }
+    .order-time { font-size: 0.75rem; color: #666; }
+    .status-badge {
+      padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .status-badge.pending { background: rgba(255,180,0,0.2); color: #ffb400; }
+    .status-badge.preparing { background: rgba(0,180,255,0.2); color: #00b4ff; }
+    .status-badge.ready { background: rgba(50,220,100,0.2); color: #32dc64; }
+    .status-badge.completed { background: rgba(150,150,150,0.2); color: #999; }
+    .order-items-list { list-style: none; padding: 0; margin: 0.5rem 0; }
+    .order-items-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.35rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.88rem; color: #ddd;
+    }
+    .order-items-list li:last-child { border-bottom: none; }
+    .item-qty { font-weight: 700; color: #ff6400; margin-right: 0.5rem; }
+    .order-card-footer { display: flex; gap: 0.6rem; margin-top: 0.8rem; flex-wrap: wrap; }
+    .kitchen-btn-status {
+      flex: 1; padding: 0.5rem; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 0.78rem; font-weight: 600; font-family: 'Inter', sans-serif;
+      transition: all 0.2s; min-width: 80px;
+    }
+    .btn-preparing { background: rgba(0,180,255,0.2); color: #00b4ff; border: 1px solid rgba(0,180,255,0.4); }
+    .btn-preparing:hover { background: rgba(0,180,255,0.35); }
+    .btn-ready { background: rgba(50,220,100,0.2); color: #32dc64; border: 1px solid rgba(50,220,100,0.4); }
+    .btn-ready:hover { background: rgba(50,220,100,0.35); }
+    .btn-completed { background: rgba(150,150,150,0.2); color: #999; border: 1px solid rgba(150,150,150,0.3); }
+    .btn-completed:hover { background: rgba(150,150,150,0.3); }
+    .kitchen-stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 120px; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem;
+      text-align: center;
+    }
+    .stat-num { font-size: 2rem; font-weight: 800; font-family: 'Outfit', sans-serif; }
+    .stat-label { font-size: 0.75rem; color: #888; margin-top: 0.2rem; }
+    .stat-pending .stat-num { color: #ffb400; }
+    .stat-preparing .stat-num { color: #00b4ff; }
+    .stat-ready .stat-num { color: #32dc64; }
+    .no-orders { text-align: center; padding: 4rem; color: #555; font-size: 1.1rem; }
+    .no-orders span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+    .new-order-flash { animation: flash 0.8s ease 3; }
+    @keyframes flash { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .order-total-kitchen { font-size: 0.85rem; color: #aaa; margin-top: 0.4rem; }
+  </style>
+</head>
+<body>
+  <header class="kitchen-header">
+    <div class="kitchen-brand">👨‍🍳 Kitchen Display</div>
+    <div class="kitchen-clock" id="kitchenClock">--:--:--</div>
+    <div class="kitchen-ws-status">
+      <span class="status-dot" id="wsStatusDot" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#ff4444"></span>
+      <span id="wsStatusText">Connecting...</span>
+    </div>
+  </header>
+
+  <main class="kitchen-main">
+    <div class="kitchen-stats">
+      <div class="stat-card stat-pending">
+        <div class="stat-num" id="statPending">0</div>
+        <div class="stat-label">⏳ Pending</div>
+      </div>
+      <div class="stat-card stat-preparing">
+        <div class="stat-num" id="statPreparing">0</div>
+        <div class="stat-label">🔥 Preparing</div>
+      </div>
+      <div class="stat-card stat-ready">
+        <div class="stat-num" id="statReady">0</div>
+        <div class="stat-label">✅ Ready</div>
+      </div>
+    </div>
+
+    <div class="kitchen-columns" id="ordersGrid">
+      <div class="no-orders">
+        <span>🍽️</span>
+        Waiting for orders...<br/>
+        <small style="color:#444;font-size:0.8rem">Orders from the kiosk will appear here in real-time</small>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ─── Clock ───────────────────────────────────────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('kitchenClock').textContent = now.toLocaleTimeString('en-IN', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ─── WebSocket ────────────────────────────────────────────────────────────
+    let orders = {};
+    let ws;
+
+    function connectWS() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}/kitchen`);
+
+      ws.onopen = () => {
+        document.getElementById('wsStatusDot').style.background = '#32dc64';
+        document.getElementById('wsStatusText').textContent = 'Live';
+      };
+
+      ws.onclose = () => {
+        document.getElementById('wsStatusDot').style.background = '#ff4444';
+        document.getElementById('wsStatusText').textContent = 'Reconnecting...';
+        setTimeout(connectWS, 3000);
+      };
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        switch (data.type) {
+          case 'INIT_ORDERS':
+            orders = {};
+            data.orders.forEach(o => orders[o.id] = o);
+            renderOrders();
+            break;
+          case 'NEW_ORDER':
+            orders[data.order.id] = data.order;
+            renderOrders();
+            flashNewOrder(data.order.id);
+            playChime();
+            break;
+          case 'ORDER_UPDATED':
+            orders[data.order.id] = data.order;
+            renderOrders();
+            break;
+        }
+      };
+    }
+
+    function updateStatus(orderId, status) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'UPDATE_STATUS', orderId, status }));
+      }
+    }
+
+    function flashNewOrder(id) {
+      setTimeout(() => {
+        const el = document.getElementById(`order-${id}`);
+        if (el) el.classList.add('new-order-flash');
+      }, 100);
+    }
+
+    function playChime() {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.5);
+      } catch(e) {}
+    }
+
+    function renderOrders() {
+      const grid = document.getElementById('ordersGrid');
+      const orderList = Object.values(orders).filter(o => o.status !== 'completed');
+      orderList.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      // Stats
+      document.getElementById('statPending').textContent = orderList.filter(o => o.status === 'pending').length;
+      document.getElementById('statPreparing').textContent = orderList.filter(o => o.status === 'preparing').length;
+      document.getElementById('statReady').textContent = orderList.filter(o => o.status === 'ready').length;
+
+      if (orderList.length === 0) {
+        grid.innerHTML = `<div class="no-orders"><span>🍽️</span>No active orders<br/><small style="color:#444;font-size:0.8rem">Waiting for new orders...</small></div>`;
+        return;
+      }
+
+      grid.innerHTML = orderList.map(order => `
+        <div class="order-card status-${order.status}" id="order-${order.id}">
+          <div class="order-card-header">
+            <div>
+              <div class="order-id">${order.orderId}</div>
+              <div class="order-table">Table: ${order.tableNumber} | ${order.customerName}</div>
+              <div class="order-time">${new Date(order.createdAt).toLocaleTimeString('en-IN')}</div>
+            </div>
+            <span class="status-badge ${order.status}">${statusLabel(order.status)}</span>
+          </div>
+          <ul class="order-items-list">
+            ${order.items.map(item => `
+              <li>
+                <span><span class="item-qty">×${item.quantity}</span>${item.name}</span>
+                <span style="color:#888">₹${(item.price * item.quantity).toFixed(2)}</span>
+              </li>
+            `).join('')}
+          </ul>
+          <div class="order-total-kitchen">Total: ₹${order.total.toFixed(2)}</div>
+          <div class="order-card-footer">
+            ${order.status === 'pending' ? `<button class="kitchen-btn-status btn-preparing" onclick="updateStatus('${order.id}','preparing')">🔥 Start Preparing</button>` : ''}
+            ${order.status === 'preparing' ? `<button class="kitchen-btn-status btn-ready" onclick="updateStatus('${order.id}','ready')">✅ Mark Ready</button>` : ''}
+            ${order.status === 'ready' ? `<button class="kitchen-btn-status btn-completed" onclick="updateStatus('${order.id}','completed')">🏁 Complete</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function statusLabel(s) {
+      return { pending: '⏳ Pending', preparing: '🔥 Preparing', ready: '✅ Ready', completed: '🏁 Done' }[s] || s;
+    }
+
+    connectWS();
+  </script>
+</body>
+</html>
